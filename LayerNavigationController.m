@@ -1,8 +1,8 @@
 
-#import "LayerNavigationController.h"
+#import "MLNavigationController.h"
 #import <QuartzCore/QuartzCore.h>
 
-@interface LayerNavigationController ()
+@interface MLNavigationController ()
 {
     CGPoint startTouch;
     
@@ -20,7 +20,7 @@
 
 @end
 
-@implementation LayerNavigationController
+@implementation MLNavigationController
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -29,7 +29,7 @@
         // Custom initialization
         _isFromBackButton = YES;
         self.screenShotsList = [[NSMutableArray alloc]initWithCapacity:2];
-        self.canDragBack = YES;
+//        self.canDragBack = YES;
     }
     return self;
 }
@@ -39,7 +39,7 @@
     if (self = [super initWithCoder:aDecoder]) {
         _isFromBackButton = YES;
         self.screenShotsList = [[NSMutableArray alloc]initWithCapacity:2];
-        self.canDragBack = YES;
+//        self.canDragBack = YES;
     }
     return self;
 }
@@ -103,9 +103,6 @@
 - (UIViewController *)popViewControllerAnimated:(BOOL)animated
 {
     if (_isFromBackButton) {
-        __block UIImageView *currentView = [[UIImageView alloc] initWithFrame:self.view.frame];
-        currentView.image = [self capture];
-        [self.view addSubview:currentView];
         [self addCurrentBackView];
         
         __block CGRect frame = self.view.frame;
@@ -113,7 +110,7 @@
         _backgroundView.transform = CGAffineTransformMakeScale(0.9,0.9);
         blackMask.alpha = 0.4;
         
-        [UIView animateWithDuration:kDefaultAnimationDuration animations:^{
+        [UIView animateWithDuration:0.45 animations:^{
             self.view.frame = frame;
             [self moveViewWithX:320];
         } completion:^(BOOL finished) {
@@ -124,7 +121,7 @@
             
             [self.backgroundView removeFromSuperview];
             self.backgroundView = nil;
-            [currentView removeFromSuperview];
+//            [currentView removeFromSuperview];
         }];
     }
     _isFromBackButton = YES;
@@ -147,11 +144,17 @@
     }
 }
 
+/**
+ *  add gesture
+ */
 -(void)addPan
 {
     [self.view addGestureRecognizer:pan];
 }
 
+/**
+ *  remove the gesture
+ */
 -(void)removePan
 {
     for (UIGestureRecognizer* g in self.view.gestureRecognizers)
@@ -181,8 +184,11 @@
     return img;
 }
 
-
-//x -> 滑动的像素
+/**
+ *  setViewAnimation
+ *
+ *  @param x pixel moved
+ */
 - (void)moveViewWithX:(float)x
 {
     x = x>320?320:x;
@@ -219,11 +225,10 @@
     lastScreenShotView.contentMode = UIViewContentModeScaleAspectFit;
     [self.backgroundView addSubview:lastScreenShotView];
 }
+
 - (void)panGestureRecognized:(UIPanGestureRecognizer *)recognizer
 {
-//    if (self.viewDeckController.visible) return;
-    
-    if (self.viewControllers.count <= 1 || !self.canDragBack) return;
+    if (self.viewControllers.count <= 1) return;
     
     if (recognizer.state == UIGestureRecognizerStateBegan) {
         
@@ -300,7 +305,6 @@
                 _isMoving = NO;
                 [self.backgroundView removeFromSuperview];
                 self.backgroundView = nil;
-                
             }];
             
         }
