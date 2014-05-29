@@ -101,19 +101,21 @@
             self.view.frame = frame;
             [self moveViewWithX:320];
         } completion:^(BOOL finished) {
-            
             CGRect frame = self.view.frame;
             frame.origin.x = 0;
             self.view.frame = frame;
             
             [self.backgroundView removeFromSuperview];
             self.backgroundView = nil;
+            [super popViewControllerAnimated:NO];
         }];
     }
     _isFromBackButton = YES;
     [self cleanLastData];
-    return [super popViewControllerAnimated:NO];
+    return nil;
 }
+
+
 
 - (NSArray *)popToRootViewControllerAnimated:(BOOL)animated
 {
@@ -255,9 +257,7 @@
                 [self.backgroundView insertSubview:lastScreenShotView belowSubview:blackMask];
                 
             }
-        }
-        
-        if (_isMoving) {
+        } else if (_isMoving) {
             [self moveViewWithX:moveTouch.x - startTouch.x];
         }
     }
@@ -268,7 +268,7 @@
         
         if (endTouch.x - startTouch.x > 100)
         {
-            [UIView animateWithDuration:0.3 animations:^{
+            [UIView animateWithDuration:kDefaultAnimationDuration animations:^{
                 [self moveViewWithX:320];
             } completion:^(BOOL finished) {
                 _isFromBackButton = NO;
@@ -296,7 +296,7 @@
     }
     else if(recognizer.state == UIGestureRecognizerStateCancelled || recognizer.state == UIGestureRecognizerStateFailed)
     {
-        [UIView animateWithDuration:0.3 animations:^{
+        [UIView animateWithDuration:kDefaultAnimationDuration animations:^{
             [self moveViewWithX:0];
         } completion:^(BOOL finished) {
             _isMoving = NO;
