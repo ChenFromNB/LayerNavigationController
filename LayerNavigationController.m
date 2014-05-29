@@ -9,14 +9,13 @@
     UIImageView *lastScreenShotView;
     UIView *blackMask;
     
-    UIImageView *tempView;
-    
     UIPanGestureRecognizer* pan;
     BOOL _isFromBackButton;
 }
 
 @property (nonatomic,strong) UIView *backgroundView;
 @property (nonatomic,strong) NSMutableArray *screenShotsList;
+@property (nonatomic,assign) BOOL isMoving;
 
 @end
 
@@ -26,10 +25,8 @@
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
-        // Custom initialization
         _isFromBackButton = YES;
         self.screenShotsList = [[NSMutableArray alloc]initWithCapacity:2];
-//        self.canDragBack = YES;
     }
     return self;
 }
@@ -39,7 +36,6 @@
     if (self = [super initWithCoder:aDecoder]) {
         _isFromBackButton = YES;
         self.screenShotsList = [[NSMutableArray alloc]initWithCapacity:2];
-//        self.canDragBack = YES;
     }
     return self;
 }
@@ -50,20 +46,6 @@
     self.view.backgroundColor = [UIColor whiteColor];
     // Do any additional setup after loading the view.
     
-    // draw a shadow for navigation view to differ the layers obviously.
-    // using this way to draw shadow will lead to the low performace
-    // the best alternative way is making a shadow image.
-    //
-    self.view.layer.shadowColor = [[UIColor blackColor]CGColor];
-    self.view.layer.shadowOffset = CGSizeMake(5, 5);
-    self.view.layer.shadowRadius = 5;
-    self.view.layer.shadowOpacity = 1;
-    self.view.userInteractionEnabled = YES;
-    
-    UIImageView *shadowImageView = [[UIImageView alloc]initWithImage:[UIImage imageNamed:@"leftside_shadow_bg"]];
-    shadowImageView.frame = CGRectMake(-10, 0, 10, self.view.frame.size.height);
-    [self.view addSubview:shadowImageView];
-    
     pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panGestureRecognized:)];
 }
 
@@ -73,21 +55,26 @@
     // Dispose of any resources that can be recreated.
 }
 
+/**
+ * 重写push效果
+ *
+ *  @param viewController
+ *  @param animated
+ */
 - (void)pushViewController:(UIViewController *)viewController animated:(BOOL)animated
 {
     [self.screenShotsList addObject:[self capture]];
-    [self addCurrentBackView];
+    [self configBackgroundView];
     
-    //设置view的frame的x点为320
-    __block CGRect frame = self.view.frame;
-    frame.origin.x = 320;
-    self.view.frame = frame;
+    //设置view的frame的x轴坐标为320
+    CGRect frameBeforePush = self.view.frame;
+    frameBeforePush.origin.x = 320;
+    self.view.frame = frameBeforePush;
     
+    CGRect frameAfterPush = frameBeforePush;
+    frameAfterPush.origin.x = 0;
     [UIView animateWithDuration:kDefaultAnimationDuration animations:^{
-        CGRect zeroFrame = frame;
-        frame.origin.x = 0;
-        self.view.frame = zeroFrame;
-        
+        self.view.frame = frameAfterPush;
         [self moveViewWithX:0];
     }completion:^(BOOL finished) {
         [self.backgroundView removeFromSuperview];
@@ -103,7 +90,7 @@
 - (UIViewController *)popViewControllerAnimated:(BOOL)animated
 {
     if (_isFromBackButton) {
-        [self addCurrentBackView];
+        [self configBackgroundView];
         
         __block CGRect frame = self.view.frame;
         frame.origin.x = 320;
@@ -121,7 +108,6 @@
             
             [self.backgroundView removeFromSuperview];
             self.backgroundView = nil;
-//            [currentView removeFromSuperview];
         }];
     }
     _isFromBackButton = YES;
@@ -153,7 +139,7 @@
 }
 
 /**
- *  remove the gesture
+ *  remove gesture
  */
 -(void)removePan
 {
@@ -176,7 +162,7 @@
     [self.view.layer renderInContext:UIGraphicsGetCurrentContext()];
     
     UIImage * img = UIGraphicsGetImageFromCurrentImageContext();
-
+    
     img = [UIImage imageWithData:UIImageJPEGRepresentation(img, 0.9)];
     
     UIGraphicsEndImageContext();
@@ -200,11 +186,10 @@
     
     float alpha = 0.4 - (x/800);
     //lastScreenShotView.center = CGPointMake(100 + x*60/320, lastScreenShotView.center.y);
-
+    
     float transX = x / (320 * 9);
     transX += 0.9;
     transX = transX > 1?1:transX;
-    
     _backgroundView.transform = CGAffineTransformMakeScale(transX,transX);
     
     blackMask.alpha = alpha;
@@ -213,7 +198,7 @@
 /**
  * backgroundview上add屏幕截图
  */
-- (void)addCurrentBackView
+- (void)configBackgroundView
 {
     CGRect frame = self.view.frame;
     self.backgroundView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, frame.size.width , frame.size.height)];
