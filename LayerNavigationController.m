@@ -107,11 +107,13 @@
             
             [self.backgroundView removeFromSuperview];
             self.backgroundView = nil;
+            [self cleanLastData];
             [super popViewControllerAnimated:NO];
         }];
+    }else{
+        _isFromBackButton = YES;
+        return [super popViewControllerAnimated:NO];
     }
-    _isFromBackButton = YES;
-    [self cleanLastData];
     return nil;
 }
 
